@@ -1,0 +1,18 @@
+[package]
+name = "rx_github"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-web = "4"
+dotenv = "0.15.0"
+image = "0.24.6"
+lazy_static = "1.4.0"
+maud = "0.25.0"
+regex = "1"
+reqwest = "0.11"
+serde = { version = "1.0", features = ["derive"] }
+silicon = "0.5.1"
+syntect = "5.0"
