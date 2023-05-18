@@ -1,10 +1,10 @@
 #[macro_use]
 extern crate lazy_static;
 
-use actix_web::{App, HttpServer, http::Uri, Result, web::{Data}};
+use actix_web::{App, HttpServer, web::{Data}};
 
 use regex::Regex;
-use serde::Deserialize;
+
 use dotenv::dotenv;
 
 mod routes;

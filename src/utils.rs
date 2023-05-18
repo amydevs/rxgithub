@@ -1,4 +1,4 @@
-use actix_web::{App, HttpServer, http::Uri, Result, web::{Data}};
+use actix_web::{http::Uri, Result};
 
 use crate::routes::SrcPath;
 
