@@ -35,6 +35,7 @@ fn parse_raw_code_uri(path: &SrcPath) -> Result<Uri> {
 #[get("/image/{author}/{repository}/{branch}/{path:.*}")]
 async fn get_source_image(_req: HttpRequest, path: Path<SrcPath>) -> Result<impl Responder> {
     let code_uri = parse_raw_code_uri(&path.into_inner())?;
+    println!("Image Visited: {}", code_uri);
 
     if let Ok(request) = reqwest::get(code_uri.to_string()).await {
         if let Some(content_type_string) = request.headers().get("Content-Type").and_then(|content_type| { content_type.to_str().ok() }) {
@@ -58,9 +59,11 @@ async fn get_source_image(_req: HttpRequest, path: Path<SrcPath>) -> Result<impl
 async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, env: Data<Options>) -> Result<impl Responder> {
     let gh_url = format!("https://github.com{}", req.uri());
     let canon_url = format!("{}{}", env.ORIGIN, req.uri());
+    
+    println!("Graph Visited: {}", canon_url);
 
     if let Some(user_agent_string) = req.headers().get("User-Agent").and_then(|user_agent| { user_agent.to_str().ok() }) {
-        if true || UA_REGEX.is_match(&user_agent_string.to_lowercase()) {
+        if UA_REGEX.is_match(&user_agent_string.to_lowercase()) {
             
             let code_uri = parse_raw_code_uri(path.as_ref())?;
             if let Ok(request) = reqwest::Client::new().head(code_uri.to_string()).send().await {
@@ -82,6 +85,7 @@ async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, env: Data<Options
                         link rel="canonical" href=(canon_url);
                         meta name="description" content=(og_description);
                         meta property="og:image" content=(og_image);
+                        meta property="og:image:type" content="image/png";
                         meta property="og:title" content=(path.repository);
                         meta property="og:description" content=(og_description);
                         meta property="og:type" content="website";
@@ -95,14 +99,16 @@ async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, env: Data<Options
                         meta name="twitter:image" content=(og_image);
 
                         @if !user_agent_string.contains("Telegram") {
-                            meta http-equiv="refresh" content=(format!("0;url={}", gh_url));
+                            meta http-equiv="refresh" content=(format!("0; url={}", gh_url));
                         }
                     }
-                    "Redirecring to GitHub..."
+                    body {
+                        "Redirecring to GitHub..."
+                    }
                 }
             };
 
-            return Ok(HttpResponse::Ok().body(html.into_string()));
+            return Ok(HttpResponse::Ok().content_type("text/html; charset=utf-8").body(html.into_string()));
         }
     }
     
