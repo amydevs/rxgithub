@@ -1,13 +1,23 @@
 use std::io::Cursor;
 
-use actix_web::{get, App, HttpResponse, HttpServer, Responder, HttpRequest, http::Uri, Result, web::{Path, Data}, Error};
+use actix_web::{get, HttpResponse, Responder, HttpRequest, Result, web::{Path, Data}};
 use image::ImageFormat;
 use maud::{html, DOCTYPE};
+use serde::Deserialize;
 
-use crate::{image_generator, parse_raw_code_uri, SrcPath, UA_REGEX, Options};
+use crate::{image_generator, UA_REGEX, Options, utils::parse_raw_code_uri};
+
+
+#[derive(Deserialize)]
+pub(crate) struct SrcPath {
+    pub(crate) author: String,
+    pub(crate) repository: String,
+    pub(crate) branch: String,
+    pub(crate) path: String
+}
 
 #[get("/image/{author}/{repository}/{branch}/{path:.*}")]
-pub async fn get_source_image(_req: HttpRequest, path: Path<SrcPath>) -> Result<impl Responder> {
+pub(crate) async fn get_source_image(_req: HttpRequest, path: Path<SrcPath>) -> Result<impl Responder> {
     let code_uri = parse_raw_code_uri(&path.into_inner())?;
     println!("Image Visited: {}", code_uri);
 
@@ -30,7 +40,7 @@ pub async fn get_source_image(_req: HttpRequest, path: Path<SrcPath>) -> Result<
 }
 
 #[get("/{author}/{repository}/blob/{branch}/{path:.*}")]
-pub async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, env: Data<Options>) -> Result<impl Responder> {
+pub(crate) async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, env: Data<Options>) -> Result<impl Responder> {
     let gh_url = format!("https://github.com{}", req.uri());
     let canon_url = format!("{}{}", env.ORIGIN, req.uri());
     
@@ -90,6 +100,6 @@ pub async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, env: Data<Opt
 }
 
 #[get("/{author}/{repository}{path:.*}")]
-pub async fn get_other_pages(req: HttpRequest) -> impl Responder {
+pub(crate) async fn get_other_pages(req: HttpRequest) -> impl Responder {
     HttpResponse::PermanentRedirect().insert_header(("Location", format!("https://github.com{}", req.uri()))).finish()
 }

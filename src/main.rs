@@ -1,36 +1,18 @@
 #[macro_use]
 extern crate lazy_static;
 
-use std::{io::Cursor};
+use actix_web::{App, HttpServer, http::Uri, Result, web::{Data}};
 
-use actix_web::{get, App, HttpResponse, HttpServer, Responder, HttpRequest, http::Uri, Result, web::{Path, Data}, Error};
-use image::ImageFormat;
-use maud::{html, DOCTYPE};
 use regex::Regex;
 use serde::Deserialize;
 use dotenv::dotenv;
 
 mod routes;
+mod utils;
 mod image_generator;
 
 lazy_static! {
     static ref UA_REGEX: Regex = Regex::new(r"bot|facebook|embed|got|firefox/92|firefox/38|curl|wget|go-http|yahoo|generator|whatsapp|preview|link|proxy|vkshare|images|analyzer|index|crawl|spider|python|cfnetwork|node").unwrap();
-}
-
-#[derive(Deserialize)]
-struct SrcPath {
-    author: String,
-    repository: String,
-    branch: String,
-    path: String
-}
-
-fn parse_raw_code_uri(path: &SrcPath) -> Result<Uri> {
-    Ok(Uri::builder()
-        .scheme("https")
-        .authority("raw.githubusercontent.com")
-        .path_and_query(format!("/{}/{}/{}/{}", path.author, path.repository, path.branch, path.path))
-        .build()?)
 }
 
 #[derive(Clone)]
