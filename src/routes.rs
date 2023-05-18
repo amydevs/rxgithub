@@ -1,11 +1,11 @@
 use std::io::Cursor;
 
-use actix_web::{get, HttpResponse, Responder, HttpRequest, Result, web::{Path, Data}};
+use actix_web::{get, HttpResponse, Responder, HttpRequest, Result, web::{Path, Data, Query}};
 use image::ImageFormat;
 use maud::{html, DOCTYPE};
 use serde::Deserialize;
 
-use crate::{image_generator, UA_REGEX, Options, utils::parse_raw_code_uri};
+use crate::{image_generator, UA_REGEX, Options, utils::{parse_raw_code_uri, QueryLines, substring_lines, substring_lines_with_max}, MAX_CODE_LINES};
 
 
 #[derive(Deserialize)]
@@ -16,10 +16,14 @@ pub(crate) struct SrcPath {
     pub(crate) path: String
 }
 
+#[derive(Deserialize, Debug)]
+pub struct SrcQuery {
+    lines: Option<QueryLines>
+}
+
 #[get("/image/{author}/{repository}/{branch}/{path:.*}")]
-pub(crate) async fn get_source_image(_req: HttpRequest, path: Path<SrcPath>) -> Result<impl Responder> {
+pub(crate) async fn get_source_image(path: Path<SrcPath>, query: Query<SrcQuery>) -> Result<impl Responder> {
     let code_uri = parse_raw_code_uri(&path.into_inner())?;
-    println!("Image Visited: {}", code_uri);
 
     if let Ok(request) = reqwest::get(code_uri.to_string()).await {
         if let Some(content_type_string) = request.headers().get("Content-Type").and_then(|content_type| { content_type.to_str().ok() }) {
@@ -28,7 +32,12 @@ pub(crate) async fn get_source_image(_req: HttpRequest, path: Path<SrcPath>) -> 
             }
             else if let Ok(src_code) = request.text().await {
                 let mut buffer = Vec::new();
-                image_generator::generate_src_image(&src_code).write_to(&mut Cursor::new(&mut buffer), ImageFormat::Png).unwrap();
+
+                let truncated_src_code = query.lines.as_ref().and_then(|query_lines| {
+                    Some(substring_lines_with_max(&src_code, query_lines))
+                }).unwrap_or(substring_lines_with_max(&src_code, &QueryLines { from: 0, to: MAX_CODE_LINES }));
+
+                image_generator::generate_src_image(&truncated_src_code).write_to(&mut Cursor::new(&mut buffer), ImageFormat::Png).unwrap();
                 return Ok(HttpResponse::Ok()
                     .content_type("image/png")
                     .body(buffer));
@@ -99,7 +108,7 @@ pub(crate) async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, env: D
     Ok(HttpResponse::TemporaryRedirect().insert_header(("Location", gh_url)).finish())
 }
 
-#[get("/{author}/{repository}{path:.*}")]
+#[get("/{path:.*}")]
 pub(crate) async fn get_other_pages(req: HttpRequest) -> impl Responder {
     HttpResponse::PermanentRedirect().insert_header(("Location", format!("https://github.com{}", req.uri()))).finish()
 }

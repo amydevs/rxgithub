@@ -14,6 +14,7 @@ mod image_generator;
 lazy_static! {
     static ref UA_REGEX: Regex = Regex::new(r"bot|facebook|embed|got|firefox/92|firefox/38|curl|wget|go-http|yahoo|generator|whatsapp|preview|link|proxy|vkshare|images|analyzer|index|crawl|spider|python|cfnetwork|node").unwrap();
 }
+static MAX_CODE_LINES: usize = 50;
 
 #[derive(Clone)]
 struct Options {
