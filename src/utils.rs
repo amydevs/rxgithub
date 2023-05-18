@@ -75,7 +75,7 @@ pub(crate) fn substring_lines_with_max(string: &str, lines: &QueryLines) -> Stri
             from: lines.from,
             to: lines.from + MAX_CODE_LINES
         };
-        return substring_lines(&string, &revised_lines);
+        return substring_lines(string, &revised_lines);
     }
     substring_lines(string, lines)
 }
@@ -89,5 +89,5 @@ pub(crate) fn substring_lines(string: &str, lines: &QueryLines) -> String {
         }
     }
     
-    return return_string;
+    return_string
 }

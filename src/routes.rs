@@ -5,7 +5,7 @@ use image::ImageFormat;
 use maud::{html, DOCTYPE};
 use serde::Deserialize;
 
-use crate::{image_generator, UA_REGEX, Options, utils::{parse_raw_code_uri, QueryLines, substring_lines, substring_lines_with_max}, MAX_CODE_LINES};
+use crate::{image_generator, UA_REGEX, Options, utils::{parse_raw_code_uri, QueryLines, substring_lines_with_max}, MAX_CODE_LINES};
 
 
 #[derive(Deserialize)]
@@ -33,9 +33,7 @@ pub(crate) async fn get_source_image(path: Path<SrcPath>, query: Query<SrcQuery>
             else if let Ok(src_code) = request.text().await {
                 let mut buffer = Vec::new();
 
-                let truncated_src_code = query.lines.as_ref().and_then(|query_lines| {
-                    Some(substring_lines_with_max(&src_code, query_lines))
-                }).unwrap_or(substring_lines_with_max(&src_code, &QueryLines { from: 0, to: MAX_CODE_LINES }));
+                let truncated_src_code = query.lines.as_ref().map(|query_lines| substring_lines_with_max(&src_code, query_lines)).unwrap_or(substring_lines_with_max(&src_code, &QueryLines { from: 0, to: MAX_CODE_LINES }));
 
                 image_generator::generate_src_image(&truncated_src_code).write_to(&mut Cursor::new(&mut buffer), ImageFormat::Png).unwrap();
                 return Ok(HttpResponse::Ok()
