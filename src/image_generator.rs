@@ -28,7 +28,7 @@ pub(crate) fn generate_src_image(code: &str, theme: &str, font: &str, font_size:
 }
 
 pub(crate) fn generate_src_image_with_query(code: &str, query: &ImgQuery) -> DynamicImage {
-    let truncated_src_code = query.lines.as_ref().map(|query_lines| substring_lines_with_max(code, query_lines)).unwrap_or(substring_lines_with_max(code, &QueryLines::new()));
+    let truncated_src_code = query.lines.as_ref().map(|query_lines| substring_lines_with_max(code, query_lines)).unwrap_or(substring_lines_with_max(code, &QueryLines::default()));
     
     generate_src_image(
         &truncated_src_code,

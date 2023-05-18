@@ -47,7 +47,7 @@ pub(crate) async fn get_source_image(path: Path<SrcPath>, query: Query<ImgQuery>
 }
 
 #[get("/{author}/{repository}/blob/{branch}/{path:.*}")]
-pub(crate) async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, env: Data<Options>) -> Result<impl Responder> {
+pub(crate) async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, query: Query<ImgQuery>, env: Data<Options>) -> Result<impl Responder> {
     let gh_url = format!("https://github.com{}", req.uri());
     let canon_url = format!("{}{}", env.ORIGIN, req.uri());
     
@@ -65,8 +65,10 @@ pub(crate) async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, env: D
                 }
             }
 
+            let query_lines = query.lines.to_owned().unwrap_or(QueryLines::default());
+            let file_name = path.path.split("/").last().unwrap_or("<undefined>");
             let og_image = format!("{}/image/{}/{}/{}/{}?{}", env.ORIGIN, path.author, path.repository, path.branch, path.path, req.query_string());
-            let og_description = format!("{}/{}@{}", path.author, path.repository, path.branch);
+            let og_description = format!("Lines {}-{} of {} from {}/{}@{}", query_lines.from, query_lines.to, file_name, path.author, path.repository, path.branch);
 
             let html = html! {
                 (DOCTYPE)

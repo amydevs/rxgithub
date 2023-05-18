@@ -21,15 +21,15 @@ pub(crate) fn parse_raw_code_uri(path: &SrcPath) -> Result<Uri> {
         .build()?)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct QueryLines {
     pub(crate) from: usize,
     pub(crate) to: usize
 }
 
-impl QueryLines {
-    pub(crate) fn new() -> QueryLines {
-        QueryLines { from: 0, to:  MAX_CODE_LINES }
+impl Default for QueryLines {
+    fn default() -> Self {
+        Self { from: 0, to:  MAX_CODE_LINES }
     }
 }
 
