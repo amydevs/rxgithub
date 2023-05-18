@@ -65,7 +65,7 @@ pub(crate) async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, env: D
                 }
             }
 
-            let og_image = format!("{}/image/{}/{}/{}/{}", env.ORIGIN, path.author, path.repository, path.branch, path.path);
+            let og_image = format!("{}/image/{}/{}/{}/{}?{}", env.ORIGIN, path.author, path.repository, path.branch, path.path, req.query_string());
             let og_description = format!("{}/{}@{}", path.author, path.repository, path.branch);
 
             let html = html! {
