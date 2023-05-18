@@ -5,7 +5,7 @@ use image::ImageFormat;
 use maud::{html, DOCTYPE};
 use serde::Deserialize;
 
-use crate::{image_generator, UA_REGEX, Options, utils::{parse_raw_code_uri, QueryLines, substring_lines_with_max}, MAX_CODE_LINES};
+use crate::{image_generator, UA_REGEX, Options, utils::{parse_raw_code_uri, QueryLines}};
 
 
 #[derive(Deserialize)]
@@ -17,12 +17,15 @@ pub(crate) struct SrcPath {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct SrcQuery {
-    lines: Option<QueryLines>
+pub(crate) struct ImgQuery {
+    pub(crate) lines: Option<QueryLines>,
+    pub(crate) theme: Option<String>,
+    pub(crate) font: Option<String>,
+    pub(crate) font_size: Option<f32>
 }
 
 #[get("/image/{author}/{repository}/{branch}/{path:.*}")]
-pub(crate) async fn get_source_image(path: Path<SrcPath>, query: Query<SrcQuery>) -> Result<impl Responder> {
+pub(crate) async fn get_source_image(path: Path<SrcPath>, query: Query<ImgQuery>) -> Result<impl Responder> {
     let code_uri = parse_raw_code_uri(&path.into_inner())?;
 
     if let Ok(request) = reqwest::get(code_uri.to_string()).await {
@@ -32,10 +35,7 @@ pub(crate) async fn get_source_image(path: Path<SrcPath>, query: Query<SrcQuery>
             }
             else if let Ok(src_code) = request.text().await {
                 let mut buffer = Vec::new();
-
-                let truncated_src_code = query.lines.as_ref().map(|query_lines| substring_lines_with_max(&src_code, query_lines)).unwrap_or(substring_lines_with_max(&src_code, &QueryLines { from: 0, to: MAX_CODE_LINES }));
-
-                image_generator::generate_src_image(&truncated_src_code).write_to(&mut Cursor::new(&mut buffer), ImageFormat::Png).unwrap();
+                image_generator::generate_src_image_with_query(&src_code, &query).write_to(&mut Cursor::new(&mut buffer), ImageFormat::Png).unwrap();
                 return Ok(HttpResponse::Ok()
                     .content_type("image/png")
                     .body(buffer));
