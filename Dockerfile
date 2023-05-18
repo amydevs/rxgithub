@@ -13,7 +13,8 @@ FROM debian:bullseye-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends expat \
     libxml2-dev \
-    pkg-config libasound2-dev libssl-dev cmake libfreetype6-dev libexpat1-dev libxcb-composite0-dev libharfbuzz-dev libfontconfig-dev
+    pkg-config libasound2-dev libssl-dev cmake libfreetype6-dev libexpat1-dev libxcb-composite0-dev libharfbuzz-dev libfontconfig-dev \
+    curl openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Run as "app" user
 RUN useradd -ms /bin/bash app
