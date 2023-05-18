@@ -27,11 +27,9 @@ pub(crate) fn generate_src_image(code: &str, theme: &str, font: &str, font_size:
     formatter.format(&highlight, theme)
 }
 
-pub(crate) fn generate_src_image_with_query(code: &str, query: &ImgQuery) -> DynamicImage {
-    let truncated_src_code = query.lines.as_ref().map(|query_lines| substring_lines_with_max(code, query_lines)).unwrap_or(substring_lines_with_max(code, &QueryLines::default()));
-    
+pub(crate) fn generate_src_image_with_query(code: &str, query: &ImgQuery) -> DynamicImage {    
     generate_src_image(
-        &truncated_src_code,
+        &code,
         &query.theme.clone().unwrap_or("Dracula".to_owned()),
         &query.font.clone().unwrap_or("Hack".to_owned()),
         query.font_size.unwrap_or(26.0)

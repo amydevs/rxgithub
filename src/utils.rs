@@ -76,6 +76,11 @@ impl<'de> Deserialize<'de> for QueryLines {
     }
 }
 
+pub(crate) fn clamp_query_lines(lines: &mut QueryLines) {
+    if (lines.to - lines.from) > MAX_CODE_LINES {
+        lines.to = MAX_CODE_LINES;
+    }
+}
 
 pub(crate) fn substring_lines_with_max(string: &str, lines: &QueryLines) -> String {
     if (lines.to - lines.from) > MAX_CODE_LINES {
