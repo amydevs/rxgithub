@@ -3,9 +3,9 @@ extern crate lazy_static;
 
 use std::{io::Cursor};
 
-use actix_web::{get, App, HttpResponse, HttpServer, Responder, HttpRequest, http::Uri, Result, web::{Path, Data}};
+use actix_web::{get, App, HttpResponse, HttpServer, Responder, HttpRequest, http::Uri, Result, web::{Path, Data}, Error};
 use image::ImageFormat;
-use maud::html;
+use maud::{html, DOCTYPE};
 use regex::Regex;
 use serde::Deserialize;
 use dotenv::dotenv;
@@ -73,6 +73,7 @@ async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, env: Data<Options
             let og_image = format!("{}/image/{}/{}/{}/{}", env.ORIGIN, path.author, path.repository, path.branch, path.path);
             
             let html = html! {
+                (DOCTYPE)
                 html prefix="og: https://ogp.me/ns#" {
                     head {
                         title { (path.repository) }
@@ -136,7 +137,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_source_image)
             .service(get_other_pages)
     })
-    .bind(("127.0.0.1", port))?
+    .bind(("0.0.0.0", port))?
     .run()
     .await
 }
