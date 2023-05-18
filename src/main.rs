@@ -1,9 +1,9 @@
 #[macro_use]
 extern crate lazy_static;
 
-use std::{io::Cursor, str::FromStr, env::VarError};
+use std::{io::Cursor};
 
-use actix_web::{get, App, HttpResponse, HttpServer, Responder, HttpRequest, http::Uri, Result, web::{Path, Data}, middleware::{Condition, Compress}};
+use actix_web::{get, App, HttpResponse, HttpServer, Responder, HttpRequest, http::Uri, Result, web::{Path, Data}};
 use image::ImageFormat;
 use maud::html;
 use regex::Regex;

@@ -8,7 +8,7 @@ pub fn generate_src_image(code: &str) -> DynamicImage {
 
     // check if truncate code works and maybe remove clone if possible
     let mut cloned_code = code.to_owned();
-    let truncate_index = code.match_indices("\n").nth(50).and_then(|e| {Some(e.0)}).unwrap_or(code.len());
+    let truncate_index = code.match_indices('\n').nth(50).map(|e| e.0).unwrap_or(code.len());
     cloned_code.truncate(truncate_index);
 
     // Change this later to first choose syntax by file extension
