@@ -1,9 +1,9 @@
 #[macro_use]
 extern crate lazy_static;
 
-use std::io::Cursor;
+use std::{io::Cursor, str::FromStr, env::VarError};
 
-use actix_web::{get, App, HttpResponse, HttpServer, Responder, HttpRequest, http::Uri, Result, web::Path};
+use actix_web::{get, App, HttpResponse, HttpServer, Responder, HttpRequest, http::Uri, Result, web::{Path, Data}, middleware::{Condition, Compress}};
 use image::ImageFormat;
 use maud::html;
 use regex::Regex;
@@ -24,18 +24,21 @@ struct SrcPath {
     path: String
 }
 
-
-#[get("/image/{author}/{repository}/{branch}/{path:.*}")]
-async fn get_source_image(_req: HttpRequest, path: Path<SrcPath>) -> Result<impl Responder> {
-    let code_uri = Uri::builder()
+fn parse_raw_code_uri(path: &SrcPath) -> Result<Uri> {
+    Ok(Uri::builder()
         .scheme("https")
         .authority("raw.githubusercontent.com")
         .path_and_query(format!("/{}/{}/{}/{}", path.author, path.repository, path.branch, path.path))
-        .build()?;
+        .build()?)
+}
+
+#[get("/image/{author}/{repository}/{branch}/{path:.*}")]
+async fn get_source_image(_req: HttpRequest, path: Path<SrcPath>) -> Result<impl Responder> {
+    let code_uri = parse_raw_code_uri(&path.into_inner())?;
 
     if let Ok(request) = reqwest::get(code_uri.to_string()).await {
-        if let Some(user_agent_string) = request.headers().get("User-Agent").and_then(|user_agent| { user_agent.to_str().ok() }) {
-            if !user_agent_string.contains("text/plain") {
+        if let Some(content_type_string) = request.headers().get("Content-Type").and_then(|content_type| { content_type.to_str().ok() }) {
+            if !content_type_string.contains("text/plain") {
                 return Ok(HttpResponse::TemporaryRedirect().insert_header(("Location", code_uri.to_string())).finish());
             }
             else if let Ok(src_code) = request.text().await {
@@ -52,12 +55,22 @@ async fn get_source_image(_req: HttpRequest, path: Path<SrcPath>) -> Result<impl
 }
 
 #[get("/{author}/{repository}/blob/{branch}/{path:.*}")]
-async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>) -> impl Responder {
+async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, env: Data<Options>) -> Result<impl Responder> {
     let canon_url = format!("https://github.com{}", req.uri());
 
     if let Some(user_agent_string) = req.headers().get("User-Agent").and_then(|user_agent| { user_agent.to_str().ok() }) {
         if UA_REGEX.is_match(&user_agent_string.to_lowercase()) {
-            let og_image = format!("/image/{}/{}/{}/{}", path.author, path.repository, path.branch, path.path);
+            
+            let code_uri = parse_raw_code_uri(path.as_ref())?;
+            if let Ok(request) = reqwest::Client::new().head(code_uri.to_string()).send().await {
+                if let Some(content_type_string) = request.headers().get("Content-Type").and_then(|content_type| { content_type.to_str().ok() }) {
+                    if !content_type_string.contains("text/plain") {
+                        return Ok(HttpResponse::TemporaryRedirect().insert_header(("Location", canon_url)).finish());
+                    }
+                }
+            }
+
+            let og_image = format!("{}/image/{}/{}/{}/{}", env.ORIGIN, path.author, path.repository, path.branch, path.path);
             
             let html = html! {
                 html prefix="og: https://ogp.me/ns#" {
@@ -75,11 +88,11 @@ async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>) -> impl Responder
                 }
             };
 
-            return HttpResponse::Ok().body(html.into_string());
+            return Ok(HttpResponse::Ok().body(html.into_string()));
         }
     }
     
-    HttpResponse::TemporaryRedirect().insert_header(("Location", canon_url)).finish()
+    Ok(HttpResponse::TemporaryRedirect().insert_header(("Location", canon_url)).finish())
 }
 
 #[get("/{author}/{repository}{path:.*}")]
@@ -87,17 +100,38 @@ async fn get_other_pages(req: HttpRequest) -> impl Responder {
     HttpResponse::PermanentRedirect().insert_header(("Location", format!("https://github.com{}", req.uri()))).finish()
 }
 
+
+#[derive(Clone)]
+struct Options {
+    PORT: u16,
+    ORIGIN: String
+}
+impl Default for Options {
+    fn default() -> Self {
+        Options {
+            PORT: 8080,
+            ORIGIN: "http://localhost:8080".to_string()
+        }
+    }
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
 
-    let port = std::env::var("PORT")
-        .ok()
-        .and_then(|port| {port.parse::<u16>().ok()})
-        .unwrap_or(8080);
+    let options = Options { 
+        PORT: std::env::var("PORT")
+            .ok()
+            .and_then(|port| {port.parse::<u16>().ok()})
+            .unwrap_or(Options::default().PORT),
+        ORIGIN: std::env::var("ORIGIN").unwrap_or(Options::default().ORIGIN)
+    };
 
-    HttpServer::new(|| {
+    let port = options.PORT;
+
+    HttpServer::new(move || {
         App::new()
+            .app_data(Data::new(options.clone()))
             .service(get_open_graph)
             .service(get_source_image)
             .service(get_other_pages)
