@@ -10,6 +10,7 @@ use dotenv::dotenv;
 mod routes;
 mod utils;
 mod image_generator;
+mod errors;
 
 lazy_static! {
     static ref UA_REGEX: Regex = Regex::new(r"bot|facebook|embed|got|firefox/92|firefox/38|curl|wget|go-http|yahoo|generator|whatsapp|preview|link|proxy|vkshare|images|analyzer|index|crawl|spider|python|cfnetwork|node").unwrap();
