@@ -94,7 +94,7 @@ pub(crate) async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, query:
                         }
                     }
                     body {
-                        "Redirecring to GitHub..."
+                        "Redirecting to GitHub..."
                     }
                 }
             };
