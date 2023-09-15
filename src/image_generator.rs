@@ -1,5 +1,5 @@
 use image::DynamicImage;
-use silicon::{assets::HighlightingAssets, formatter::ImageFormatterBuilder, utils::ShadowAdder, font::ImageFont};
+use silicon::{assets::HighlightingAssets, formatter::ImageFormatterBuilder, utils::ShadowAdder};
 use syntect::{easy::HighlightLines, util::LinesWithEndings};
 use resvg::{self, usvg::{self, TreeParsing, fontdb, TreeTextToPath}, tiny_skia};
 
@@ -56,8 +56,8 @@ pub(crate) fn generate_svg_image(buffer: &[u8]) -> Option<Vec<u8>> {
     let size = rtree.size.to_int_size().scale_to_width(960)?;
     let mut pixmap = tiny_skia::Pixmap::new(size.width(), size.height())?;
     let render_ts = tiny_skia::Transform::from_scale(
-        size.width() as f32 / tree.size.width() as f32,
-        size.height() as f32 / tree.size.height() as f32,
+        size.width() as f32 / tree.size.width(),
+        size.height() as f32 / tree.size.height(),
     );
     rtree.render(render_ts, &mut pixmap.as_mut());
     pixmap.encode_png().ok()
