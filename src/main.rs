@@ -21,13 +21,15 @@ static MAX_CODE_LINES: u32 = 25;
 #[derive(Clone)]
 struct Options {
     PORT: u16,
-    ORIGIN: String
+    ORIGIN: String,
+    MAX_DOWNLOAD_BYTES: u32
 }
 impl Default for Options {
     fn default() -> Self {
         Options {
             PORT: 8080,
-            ORIGIN: "http://localhost:8080".to_string()
+            ORIGIN: "http://localhost:8080".to_string(),
+            MAX_DOWNLOAD_BYTES: 1024 * 1024 * 50 // 25 MiB
         }
     }
 }
@@ -41,7 +43,11 @@ async fn main() -> std::io::Result<()> {
             .ok()
             .and_then(|port| {port.parse::<u16>().ok()})
             .unwrap_or(Options::default().PORT),
-        ORIGIN: std::env::var("ORIGIN").unwrap_or(Options::default().ORIGIN)
+        ORIGIN: std::env::var("ORIGIN").unwrap_or(Options::default().ORIGIN),
+        MAX_DOWNLOAD_BYTES: std::env::var("MAX_DOWNLOAD_BYTES")
+            .ok()
+            .and_then(|bytes| {bytes.parse::<u32>().ok()})
+            .unwrap_or(Options::default().MAX_DOWNLOAD_BYTES)
     };
 
     let port = options.PORT;

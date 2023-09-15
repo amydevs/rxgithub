@@ -26,7 +26,7 @@ pub(crate) struct ImgQuery {
 }
 
 #[get("/image/{author}/{repository}/{branch}/{path:.*}")]
-pub(crate) async fn get_source_image(path: Path<SrcPath>, query: Query<ImgQuery>) -> Result<impl Responder> {
+pub(crate) async fn get_source_image(path: Path<SrcPath>, query: Query<ImgQuery>, env: Data<Options>) -> Result<impl Responder> {
     let code_uri = parse_raw_code_uri(&path.into_inner())?;
     
     if let Ok(response) = reqwest::get(code_uri.to_string()).await {
@@ -36,7 +36,8 @@ pub(crate) async fn get_source_image(path: Path<SrcPath>, query: Query<ImgQuery>
             }
             else {
                 let mut query_lines = query.lines.to_owned().unwrap_or(QueryLines::default());
-                let mut line = 0;
+                let mut line: u32 = 0;
+                let mut bytes_read: u32 = 0;
                 let mut buffer = Vec::new();
                 let mut body_stream = response.bytes_stream();
 
@@ -49,7 +50,12 @@ pub(crate) async fn get_source_image(path: Path<SrcPath>, query: Query<ImgQuery>
                         if byte == b'\n' {
                             line += 1;
                         }
+                        bytes_read += 1;
 
+                        if bytes_read >= env.MAX_DOWNLOAD_BYTES {
+                            break;
+                        }
+                        
                         if line >= start && line < query_lines.to {
                             buffer.push(byte);
                         }
