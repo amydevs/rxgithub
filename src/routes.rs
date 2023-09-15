@@ -2,10 +2,10 @@ use std::io::Cursor;
 
 use actix_web::{get, HttpResponse, Responder, HttpRequest, Result, web::{Path, Data, Query}};
 use image::ImageFormat;
-use maud::{html, DOCTYPE};
+use maud::{html, DOCTYPE, PreEscaped};
 use serde::Deserialize;
 
-use crate::{image_generator, UA_REGEX, Options, utils::{parse_raw_code_uri, QueryLines}, errors::RequestError};
+use crate::{image_generator, UA_REGEX, Options, utils::{parse_raw_code_uri, QueryLines}, errors::RequestError, content::{Content, TextContent, ImageContent}};
 
 
 #[derive(Deserialize)]
@@ -57,49 +57,61 @@ pub(crate) async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, query:
             
             let code_uri = parse_raw_code_uri(path.as_ref())?;
             let request = reqwest::Client::new().head(code_uri.to_string()).send().await.map_err(RequestError::from)?;
-            if let Some(content_type_string) = request.headers().get("Content-Type").and_then(|content_type| { content_type.to_str().ok() }) {
-                if !content_type_string.contains("text/plain") {
-                    return Ok(HttpResponse::TemporaryRedirect().insert_header(("Location", gh_url)).finish());
-                }
-            }
+            let content_type_string = request.headers().get("Content-Type").and_then(|content_type| { content_type.to_str().ok() }).unwrap_or("");
 
-            let query_lines = query.lines.to_owned().unwrap_or(QueryLines::default());
-            let file_name = path.path.split("/").last().unwrap_or("<undefined>");
-            let og_image = format!("{}/image/{}/{}/{}/{}?{}", env.ORIGIN, path.author, path.repository, path.branch, path.path, req.query_string());
-            let og_description = format!("Lines {}-{} of {} from {}/{}@{}", query_lines.from, query_lines.to, file_name, path.author, path.repository, path.branch);
 
-            let html = html! {
-                (DOCTYPE)
-                html {
-                    head {
-                        title { (path.repository) }
-                        link rel="canonical" href=(canon_url);
-                        meta name="description" content=(og_description);
-                        meta property="og:image" content=(og_image);
-                        meta property="og:image:type" content="image/png";
-                        meta property="og:title" content=(path.repository);
-                        meta property="og:description" content=(og_description);
-                        meta property="og:type" content="website";
-                        meta property="og:url" content=(canon_url);
-
-                        meta name="twitter:card" content="summary_large_image";
-                        meta property="twitter:domain" content=(env.ORIGIN.replace("http://", "").replace("https://", ""));
-                        meta property="twitter:url" content=(canon_url);
-                        meta name="twitter:title" content=(path.repository);
-                        meta name="twitter:description" content=(og_description);
-                        meta name="twitter:image" content=(og_image);
-
-                        @if !user_agent_string.contains("Telegram") {
-                            meta http-equiv="refresh" content=(format!("0; url={}", gh_url));
-                        }
-                    }
-                    body {
-                        "Redirecting to GitHub..."
-                    }
-                }
+            let wrapped_injected_elements: Option<PreEscaped<String>> = match content_type_string {
+                "text/plain" => {
+                    let query_lines = query.lines.unwrap_or(QueryLines::default());
+                    let content = TextContent {
+                        path: path.as_ref(),
+                        query_string: req.query_string().to_owned(),
+                        lines: query_lines,
+                        origin: env.ORIGIN.clone()
+                    };
+                    Some(content.get_html())
+                },
+                "image/png" |
+                "image/jpeg" |
+                "image/jpg" |
+                "image/gif" => {
+                    let content = ImageContent {
+                        path: path.as_ref(),
+                        image_url: code_uri.to_string(),
+                        mime: content_type_string.to_owned()
+                    };
+                    Some(content.get_html())
+                },
+                _ => None
             };
 
-            return Ok(HttpResponse::Ok().content_type("text/html; charset=utf-8").body(html.into_string()));
+            if let Some(injected_elements) = wrapped_injected_elements {
+                let html = html! {
+                    (DOCTYPE)
+                    html {
+                        head {
+                            title { (path.repository) }
+                            link rel="canonical" href=(canon_url);
+                            meta property="og:type" content="website";
+                            meta property="og:url" content=(canon_url);
+    
+                            meta property="twitter:domain" content=(env.ORIGIN.replace("http://", "").replace("https://", ""));
+                            meta property="twitter:url" content=(canon_url);
+                            
+                            (injected_elements)
+    
+                            @if !user_agent_string.contains("Telegram") {
+                                meta http-equiv="refresh" content=(format!("0; url={}", gh_url));
+                            }
+                        }
+                        body {
+                            "Redirecting to GitHub..."
+                        }
+                    }
+                };
+    
+                return Ok(HttpResponse::Ok().content_type("text/html; charset=utf-8").body(html.into_string()));
+            }
         }
     }
     
