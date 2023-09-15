@@ -59,30 +59,35 @@ pub(crate) async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, query:
             let request = reqwest::Client::new().head(code_uri.to_string()).send().await.map_err(RequestError::from)?;
             let content_type_string = request.headers().get("Content-Type").and_then(|content_type| { content_type.to_str().ok() }).unwrap_or("");
 
+            println!("Content-Type: {}", content_type_string);
 
-            let wrapped_injected_elements: Option<PreEscaped<String>> = match content_type_string {
-                "text/plain" => {
-                    let query_lines = query.lines.unwrap_or(QueryLines::default());
-                    let content = TextContent {
-                        path: path.as_ref(),
-                        query_string: req.query_string().to_owned(),
-                        lines: query_lines,
-                        origin: env.ORIGIN.clone()
-                    };
-                    Some(content.get_html())
-                },
-                "image/png" |
-                "image/jpeg" |
-                "image/jpg" |
-                "image/gif" => {
-                    let content = ImageContent {
-                        path: path.as_ref(),
-                        image_url: code_uri.to_string(),
-                        mime: content_type_string.to_owned()
-                    };
-                    Some(content.get_html())
-                },
-                _ => None
+            let wrapped_injected_elements = 
+            if content_type_string.contains("text/plain") {
+                let query_lines = query.lines.unwrap_or(QueryLines::default());
+                let content = TextContent {
+                    path: path.as_ref(),
+                    query_string: req.query_string().to_owned(),
+                    lines: query_lines,
+                    origin: env.ORIGIN.clone()
+                };
+                Some(content.get_html())
+            } 
+            else if 
+                content_type_string.contains("image/png") ||
+                content_type_string.contains("image/jpeg") ||
+                content_type_string.contains("image/jpg") ||
+                content_type_string.contains("image/gif")
+            {
+                
+                let content = ImageContent {
+                    path: path.as_ref(),
+                    image_url: code_uri.to_string(),
+                    mime: content_type_string.to_owned()
+                };
+                Some(content.get_html())
+            }
+            else {
+                None
             };
 
             if let Some(injected_elements) = wrapped_injected_elements {
