@@ -15,7 +15,7 @@ pub(crate) struct TextContent<'a> {
 
 impl<'a> Content for TextContent<'a> {
     fn get_html(&self) -> PreEscaped<String> {
-        let file_name = self.path.path.split("/").last().unwrap_or("<undefined>");
+        let file_name = self.path.path.split('/').last().unwrap_or("<undefined>");
         let og_image = format!("{}/image/{}/{}/{}/{}?{}", self.origin, self.path.author, self.path.repository, self.path.branch, self.path.path, self.query_string);
         let og_description = format!("Lines {}-{} of {} from {}/{}@{}", self.lines.from, self.lines.to, file_name, self.path.author, self.path.repository, self.path.branch);
         html!{
@@ -41,7 +41,7 @@ pub(crate) struct ImageContent<'a> {
 
 impl<'a> Content for ImageContent<'a> {
     fn get_html(&self) -> PreEscaped<String> {
-        let file_name = self.path.path.split("/").last().unwrap_or("<undefined>");
+        let file_name = self.path.path.split('/').last().unwrap_or("<undefined>");
         let og_description = format!("{} from {}/{}@{}", file_name, self.path.author, self.path.repository, self.path.branch);
         html!{
             meta name="description" content=(og_description);
@@ -66,7 +66,7 @@ pub(crate) struct VideoContent<'a> {
 
 impl<'a> Content for VideoContent<'a> {
     fn get_html(&self) -> PreEscaped<String> {
-        let file_name = self.path.path.split("/").last().unwrap_or("<undefined>");
+        let file_name = self.path.path.split('/').last().unwrap_or("<undefined>");
         let og_description = format!("{} from {}/{}@{}", file_name, self.path.author, self.path.repository, self.path.branch);
         html!{
             meta name="description" content=(og_description);

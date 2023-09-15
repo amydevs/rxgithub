@@ -2,7 +2,7 @@ use image::DynamicImage;
 use silicon::{assets::HighlightingAssets, formatter::ImageFormatterBuilder, utils::ShadowAdder};
 use syntect::{easy::HighlightLines, util::LinesWithEndings};
 
-use crate::{routes::ImgQuery, utils::{substring_lines_with_max, QueryLines}};
+use crate::{routes::ImgQuery};
 
 pub(crate) fn generate_src_image(code: &str, starting_line: u32, theme: &str, font: &str, font_size: f32) -> DynamicImage {
     let ha = HighlightingAssets::new();
@@ -30,8 +30,8 @@ pub(crate) fn generate_src_image(code: &str, starting_line: u32, theme: &str, fo
 
 pub(crate) fn generate_src_image_with_query(code: &str, query: &ImgQuery) -> DynamicImage {    
     generate_src_image(
-        &code,
-        query.lines.and_then(|lines| Some(lines.from)).unwrap_or(1),
+        code,
+        query.lines.map(|lines| lines.from).unwrap_or(1),
         &query.theme.clone().unwrap_or("Dracula".to_owned()),
         &query.font.clone().unwrap_or("Hack".to_owned()),
         query.font_size.unwrap_or(26.0)
