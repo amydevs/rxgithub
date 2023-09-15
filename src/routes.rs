@@ -5,7 +5,7 @@ use image::ImageFormat;
 use maud::{html, DOCTYPE, PreEscaped};
 use serde::Deserialize;
 
-use crate::{image_generator, UA_REGEX, Options, utils::{parse_raw_code_uri, QueryLines}, errors::RequestError, content::{Content, TextContent, ImageContent}};
+use crate::{image_generator, UA_REGEX, Options, utils::{parse_raw_code_uri, QueryLines}, errors::RequestError, content::{Content, TextContent, ImageContent, VideoContent}};
 
 
 #[derive(Deserialize)]
@@ -82,6 +82,14 @@ pub(crate) async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, query:
                 let content = ImageContent {
                     path: path.as_ref(),
                     image_url: code_uri.to_string(),
+                    mime: content_type_string.to_owned()
+                };
+                Some(content.get_html())
+            }
+            else if content_type_string.contains("video/mp4") {
+                let content = VideoContent {
+                    path: path.as_ref(),
+                    video_url: code_uri.to_string(),
                     mime: content_type_string.to_owned()
                 };
                 Some(content.get_html())
