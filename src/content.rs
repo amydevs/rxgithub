@@ -57,3 +57,28 @@ impl<'a> Content for ImageContent<'a> {
         }
     }
 }
+
+pub(crate) struct VideoContent<'a> {
+    pub(crate) path: &'a SrcPath,
+    pub(crate) video_url: String,
+    pub(crate) mime: String,
+}
+
+impl<'a> Content for VideoContent<'a> {
+    fn get_html(&self) -> PreEscaped<String> {
+        let file_name = self.path.path.split("/").last().unwrap_or("<undefined>");
+        let og_description = format!("{} from {}/{}@{}", file_name, self.path.author, self.path.repository, self.path.branch);
+        html!{
+            meta name="description" content=(og_description);
+            meta property="og:video" content=(self.video_url);
+            meta property="og:video:type" content=(self.mime);
+            meta property="og:title" content=(self.path.repository);
+            meta property="og:description" content=(og_description);
+
+            meta name="twitter:title" content=(self.path.repository);
+            meta name="twitter:card" content="player";
+            meta name="twitter:description" content=(og_description);
+            meta name="twitter:video" content=(self.video_url);
+        }
+    }
+}

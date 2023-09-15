@@ -99,6 +99,7 @@ pub(crate) async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, query:
                             link rel="canonical" href=(canon_url);
                             meta property="og:type" content="website";
                             meta property="og:url" content=(canon_url);
+                            meta property="og:site_name" content="GitHub";
     
                             meta property="twitter:domain" content=(env.ORIGIN.replace("http://", "").replace("https://", ""));
                             meta property="twitter:url" content=(canon_url);
