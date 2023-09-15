@@ -14,6 +14,7 @@ maud = "0.25"
 futures-util = "0.3"
 regex = "1"
 reqwest = { version = "0.11", features = ["stream"] }
+resvg = "0.35"
 serde = { version = "1.0", features = ["derive"] }
 silicon = { version = "0.5", default-features = false, features = ["bin"] }
 syntect = "5.0"

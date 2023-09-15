@@ -6,7 +6,7 @@ use image::ImageFormat;
 use maud::{html, DOCTYPE};
 use serde::Deserialize;
 
-use crate::{image_generator, UA_REGEX, Options, utils::{parse_raw_code_uri, QueryLines, clamp_query_lines}, errors::RequestError, content::{Content, TextContent, ImageContent, VideoContent}};
+use crate::{image_generator, UA_REGEX, Options, utils::{parse_raw_code_uri, QueryLines, clamp_query_lines}, errors::RequestError, content::{Content, TextContent, ImageContent, VideoContent, SVGContent}};
 
 
 #[derive(Deserialize)]
@@ -30,46 +30,64 @@ pub(crate) async fn get_source_image(path: Path<SrcPath>, query: Query<ImgQuery>
     let code_uri = parse_raw_code_uri(&path.into_inner())?;
     
     if let Ok(response) = reqwest::get(code_uri.to_string()).await {
-        if let Some(content_type_string) = response.headers().get("Content-Type").and_then(|content_type| { content_type.to_str().ok() }) {
-            if !content_type_string.contains("text/plain") {
-                return Ok(HttpResponse::TemporaryRedirect().insert_header(("Location", code_uri.to_string())).finish());
-            }
-            else {
-                let mut query_lines = query.lines.to_owned().unwrap_or(QueryLines::default());
-                let mut line: u32 = 0;
-                let mut bytes_read: u32 = 0;
-                let mut buffer = Vec::new();
-                let mut body_stream = response.bytes_stream();
+        let content_type_string = response.headers().get("Content-Type").and_then(|content_type| { content_type.to_str().ok() }).unwrap_or("");
+        if content_type_string.contains("text/plain") {
+            let mut query_lines = query.lines.to_owned().unwrap_or(QueryLines::default());
+            let mut line: u32 = 0;
+            let mut bytes_read: u32 = 0;
+            let mut buffer = Vec::new();
+            let mut body_stream = response.bytes_stream();
 
-                clamp_query_lines(&mut query_lines);
+            clamp_query_lines(&mut query_lines);
 
-                let start = query_lines.from - 1;
+            let start = query_lines.from - 1;
 
-                while let Some(Ok(chunk)) = body_stream.next().await {
-                    for byte in chunk {
-                        if byte == b'\n' {
-                            line += 1;
-                        }
-                        bytes_read += 1;
+            while let Some(Ok(chunk)) = body_stream.next().await {
+                for byte in chunk {
+                    if byte == b'\n' {
+                        line += 1;
+                    }
+                    bytes_read += 1;
 
-                        if bytes_read >= env.MAX_DOWNLOAD_BYTES {
-                            break;
-                        }
-                        
-                        if line >= start && line < query_lines.to {
-                            buffer.push(byte);
-                        }
-                        else if line >= query_lines.to {
-                            break;
-                        }
+                    if bytes_read >= env.MAX_DOWNLOAD_BYTES {
+                        break;
+                    }
+                    
+                    if line >= start && line < query_lines.to {
+                        buffer.push(byte);
+                    }
+                    else if line >= query_lines.to {
+                        break;
                     }
                 }
-                if let Ok(src_code) = std::str::from_utf8(&buffer) {
-                    image_generator::generate_src_image_with_query(src_code, &query).write_to(&mut Cursor::new(&mut buffer), ImageFormat::Png).unwrap();
-                    return Ok(HttpResponse::Ok()
-                        .content_type("image/png")
-                        .body(buffer));
+            }
+            if let Ok(src_code) = std::str::from_utf8(&buffer) {
+                image_generator::generate_src_image_with_query(src_code, &query).write_to(&mut Cursor::new(&mut buffer), ImageFormat::Png).unwrap();
+                return Ok(HttpResponse::Ok()
+                    .content_type("image/png")
+                    .body(buffer));
+            }
+        }
+        else if content_type_string.contains("image/svg+xml") {
+            let mut bytes_read: u32 = 0;
+            let mut body_stream = response.bytes_stream();
+            let mut buffer = Vec::new();
+
+            while let Some(Ok(chunk)) = body_stream.next().await {
+                for byte in chunk {
+                    buffer.push(byte);
+
+                    bytes_read += 1;
+
+                    if bytes_read >= env.MAX_DOWNLOAD_BYTES {
+                        break;
+                    }
                 }
+            }
+            if let Some(image) = image_generator::generate_svg_image(&buffer) {
+                return Ok(HttpResponse::Ok()
+                    .content_type("image/png")
+                    .body(image));
             }
         }
     }
@@ -115,6 +133,13 @@ pub(crate) async fn get_open_graph(req: HttpRequest, path: Path<SrcPath>, query:
                     path: path.as_ref(),
                     image_url: code_uri.to_string(),
                     mime: content_type_string.to_owned()
+                };
+                Some(content.get_html())
+            }
+            else if content_type_string.contains("image/svg+xml") {
+                let content = SVGContent {
+                    path: path.as_ref(),
+                    origin: env.ORIGIN.clone(),
                 };
                 Some(content.get_html())
             }

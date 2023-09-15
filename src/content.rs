@@ -58,6 +58,31 @@ impl<'a> Content for ImageContent<'a> {
     }
 }
 
+pub(crate) struct SVGContent<'a> {
+    pub(crate) path: &'a SrcPath,
+    pub(crate) origin: String,
+}
+
+impl<'a> Content for SVGContent<'a> {
+    fn get_html(&self) -> PreEscaped<String> {
+        let file_name = self.path.path.split('/').last().unwrap_or("<undefined>");
+        let og_image = format!("{}/image/{}/{}/{}/{}", self.origin, self.path.author, self.path.repository, self.path.branch, self.path.path);
+        let og_description = format!("{} from {}/{}@{}", file_name, self.path.author, self.path.repository, self.path.branch);
+        html!{
+            meta name="description" content=(og_description);
+            meta property="og:image" content=(og_image);
+            meta property="og:image:type" content="image/png";
+            meta property="og:title" content=(self.path.repository);
+            meta property="og:description" content=(og_description);
+
+            meta name="twitter:title" content=(self.path.repository);
+            meta name="twitter:card" content="summary_large_image";
+            meta name="twitter:description" content=(og_description);
+            meta name="twitter:image" content=(og_image);
+        }
+    }
+}
+
 pub(crate) struct VideoContent<'a> {
     pub(crate) path: &'a SrcPath,
     pub(crate) video_url: String,
