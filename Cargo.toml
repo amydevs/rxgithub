@@ -7,10 +7,10 @@ edition = "2021"
 
 [dependencies]
 actix-web = "4"
-dotenv = "0.15.0"
-image = "0.24.6"
-lazy_static = "1.4.0"
-maud = "0.25.0"
+dotenv = "0.15"
+image = "0.24"
+lazy_static = "1.4"
+maud = "0.25"
 regex = "1"
 reqwest = "0.11"
 serde = { version = "1.0", features = ["derive"] }
