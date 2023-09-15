@@ -29,7 +29,7 @@ pub(crate) struct QueryLines {
 
 impl Default for QueryLines {
     fn default() -> Self {
-        Self { from: 0, to:  MAX_CODE_LINES }
+        Self { from: 1, to:  MAX_CODE_LINES }
     }
 }
 

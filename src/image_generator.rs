@@ -20,9 +20,10 @@ pub(crate) fn generate_src_image(code: &str, theme: &str, font: &str, font_size:
     
     let mut formatter = ImageFormatterBuilder::new()
         .font(vec![(font, font_size)])
-         .shadow_adder(ShadowAdder::default())
-         .build()
-         .unwrap();
+        .shadow_adder(ShadowAdder::default())
+        .line_offset(1)
+        .build()
+        .unwrap();
 
     formatter.format(&highlight, theme)
 }

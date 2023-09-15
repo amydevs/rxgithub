@@ -3,7 +3,7 @@ use std::io::Cursor;
 use actix_web::{get, HttpResponse, Responder, HttpRequest, Result, web::{Path, Data, Query}};
 use futures_util::StreamExt;
 use image::ImageFormat;
-use maud::{html, DOCTYPE, PreEscaped};
+use maud::{html, DOCTYPE};
 use serde::Deserialize;
 
 use crate::{image_generator, UA_REGEX, Options, utils::{parse_raw_code_uri, QueryLines, clamp_query_lines}, errors::RequestError, content::{Content, TextContent, ImageContent, VideoContent}};
@@ -42,16 +42,18 @@ pub(crate) async fn get_source_image(path: Path<SrcPath>, query: Query<ImgQuery>
 
                 clamp_query_lines(&mut query_lines);
 
+                let start = query_lines.from - 1;
+
                 while let Some(Ok(chunk)) = body_stream.next().await {
                     for byte in chunk {
                         if byte == b'\n' {
                             line += 1;
                         }
 
-                        if line >= query_lines.from && line <= query_lines.to {
+                        if line >= start && line < query_lines.to {
                             buffer.push(byte);
                         }
-                        else if line > query_lines.to {
+                        else if line >= query_lines.to {
                             break;
                         }
                     }
