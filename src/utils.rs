@@ -23,8 +23,8 @@ pub(crate) fn parse_raw_code_uri(path: &SrcPath) -> Result<Uri> {
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct QueryLines {
-    pub(crate) from: usize,
-    pub(crate) to: usize
+    pub(crate) from: u32,
+    pub(crate) to: u32
 }
 
 impl Default for QueryLines {
@@ -57,10 +57,10 @@ impl<'de> Deserialize<'de> for QueryLines {
                     return Err(E::custom("invalid format"));
                 }
 
-                let from: usize = parts[0]
+                let from: u32 = parts[0]
                     .parse()
                     .map_err(|_| E::custom("invalid 'from' value"))?;
-                let to: usize = parts[1]
+                let to: u32 = parts[1]
                     .parse()
                     .map_err(|_| E::custom("invalid 'to' value"))?;
 
@@ -95,8 +95,10 @@ pub(crate) fn substring_lines_with_max(string: &str, lines: &QueryLines) -> Stri
 
 pub(crate) fn substring_lines(string: &str, lines: &QueryLines) -> String {
     let mut return_string = String::new();
+    let start = lines.from - 1;
     for (i, line) in string.lines().enumerate() {
-        if lines.from <= i && i <= lines.to {
+        let i = i as u32;
+        if i >= start && i <= lines.to {
             return_string += line;
             return_string += "\n";
         }

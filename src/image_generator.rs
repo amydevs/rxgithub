@@ -4,7 +4,7 @@ use syntect::{easy::HighlightLines, util::LinesWithEndings};
 
 use crate::{routes::ImgQuery, utils::{substring_lines_with_max, QueryLines}};
 
-pub(crate) fn generate_src_image(code: &str, theme: &str, font: &str, font_size: f32) -> DynamicImage {
+pub(crate) fn generate_src_image(code: &str, starting_line: u32, theme: &str, font: &str, font_size: f32) -> DynamicImage {
     let ha = HighlightingAssets::new();
     let (ps, ts) = (ha.syntax_set, ha.theme_set);
 
@@ -21,7 +21,7 @@ pub(crate) fn generate_src_image(code: &str, theme: &str, font: &str, font_size:
     let mut formatter = ImageFormatterBuilder::new()
         .font(vec![(font, font_size)])
         .shadow_adder(ShadowAdder::default())
-        .line_offset(1)
+        .line_offset(starting_line)
         .build()
         .unwrap();
 
@@ -31,6 +31,7 @@ pub(crate) fn generate_src_image(code: &str, theme: &str, font: &str, font_size:
 pub(crate) fn generate_src_image_with_query(code: &str, query: &ImgQuery) -> DynamicImage {    
     generate_src_image(
         &code,
+        query.lines.and_then(|lines| Some(lines.from)).unwrap_or(1),
         &query.theme.clone().unwrap_or("Dracula".to_owned()),
         &query.font.clone().unwrap_or("Hack".to_owned()),
         query.font_size.unwrap_or(26.0)
