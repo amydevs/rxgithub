@@ -1,14 +1,16 @@
 use std::fmt::{Debug, Display};
 
-use actix_web::{ResponseError, HttpResponse};
+use actix_web::{HttpResponse, ResponseError};
 
 pub struct RequestError {
-    original_error: reqwest::Error
+    original_error: reqwest::Error,
 }
 
 impl std::convert::From<reqwest::Error> for RequestError {
     fn from(error: reqwest::Error) -> Self {
-        Self { original_error: error }
+        Self {
+            original_error: error,
+        }
     }
 }
 
@@ -24,9 +26,7 @@ impl Debug for RequestError {
     }
 }
 
-impl std::error::Error for RequestError {
-
-}
+impl std::error::Error for RequestError {}
 
 impl ResponseError for RequestError {
     fn error_response(&self) -> HttpResponse {

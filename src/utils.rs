@@ -1,15 +1,19 @@
-
-
 use actix_web::{http::Uri, Result};
-use serde::{Deserialize, Deserializer, de};
+use serde::{de, Deserialize, Deserializer};
 
-use crate::{routes::{SrcPath, GistPath}, MAX_CODE_LINES};
+use crate::{
+    routes::{GistPath, SrcPath},
+    MAX_CODE_LINES,
+};
 
 pub(crate) fn parse_blob_code_uri(path: &SrcPath) -> Result<Uri> {
     Ok(Uri::builder()
         .scheme("https")
         .authority("github.com")
-        .path_and_query(format!("/{}/{}/blob/{}/{}", path.author, path.repository, path.branch, path.path))
+        .path_and_query(format!(
+            "/{}/{}/blob/{}/{}",
+            path.author, path.repository, path.branch, path.path
+        ))
         .build()?)
 }
 
@@ -17,7 +21,10 @@ pub(crate) fn parse_raw_code_uri(path: &SrcPath) -> Result<Uri> {
     Ok(Uri::builder()
         .scheme("https")
         .authority("raw.githubusercontent.com")
-        .path_and_query(format!("/{}/{}/{}/{}", path.author, path.repository, path.branch, path.path))
+        .path_and_query(format!(
+            "/{}/{}/{}/{}",
+            path.author, path.repository, path.branch, path.path
+        ))
         .build()?)
 }
 
@@ -32,12 +39,15 @@ pub(crate) fn parse_raw_gist_code_uri(path: &GistPath) -> Result<Uri> {
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct QueryLines {
     pub(crate) from: u32,
-    pub(crate) to: u32
+    pub(crate) to: u32,
 }
 
 impl Default for QueryLines {
     fn default() -> Self {
-        Self { from: 1, to:  MAX_CODE_LINES }
+        Self {
+            from: 1,
+            to: MAX_CODE_LINES,
+        }
     }
 }
 
@@ -94,7 +104,7 @@ pub(crate) fn substring_lines_with_max(string: &str, lines: &QueryLines) -> Stri
     if (lines.to - lines.from) > MAX_CODE_LINES {
         let revised_lines = QueryLines {
             from: lines.from,
-            to: lines.from + MAX_CODE_LINES
+            to: lines.from + MAX_CODE_LINES,
         };
         return substring_lines(string, &revised_lines);
     }
@@ -111,6 +121,6 @@ pub(crate) fn substring_lines(string: &str, lines: &QueryLines) -> String {
             return_string += "\n";
         }
     }
-    
+
     return_string
 }

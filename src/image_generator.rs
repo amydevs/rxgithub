@@ -1,16 +1,27 @@
 use image::DynamicImage;
+use resvg::{
+    self, tiny_skia,
+    usvg::{self, fontdb, TreeParsing, TreeTextToPath},
+};
 use silicon::{assets::HighlightingAssets, formatter::ImageFormatterBuilder, utils::ShadowAdder};
 use syntect::{easy::HighlightLines, util::LinesWithEndings};
-use resvg::{self, usvg::{self, TreeParsing, fontdb, TreeTextToPath}, tiny_skia};
 
-use crate::{routes::ImgQuery};
+use crate::routes::ImgQuery;
 
-pub(crate) fn generate_src_image(code: &str, starting_line: u32, theme: &str, font: &str, font_size: f32) -> DynamicImage {
+pub(crate) fn generate_src_image(
+    code: &str,
+    starting_line: u32,
+    theme: &str,
+    font: &str,
+    font_size: f32,
+) -> DynamicImage {
     let ha = HighlightingAssets::new();
     let (ps, ts) = (ha.syntax_set, ha.theme_set);
 
     // Change this later to first choose syntax by file extension
-    let syntax = ps.find_syntax_by_first_line(code).unwrap_or(ps.find_syntax_by_token("rs").unwrap());
+    let syntax = ps
+        .find_syntax_by_first_line(code)
+        .unwrap_or(ps.find_syntax_by_token("rs").unwrap());
     let theme = ts.themes.get(theme).unwrap_or(&ts.themes["Dracula"]);
 
     let mut h = HighlightLines::new(syntax, theme);
@@ -18,7 +29,7 @@ pub(crate) fn generate_src_image(code: &str, starting_line: u32, theme: &str, fo
         .map(|line| h.highlight_line(line, &ps))
         .collect::<Result<Vec<_>, _>>()
         .unwrap();
-    
+
     let mut formatter = ImageFormatterBuilder::new()
         .font(vec![(font, font_size)])
         .shadow_adder(ShadowAdder::default())
@@ -29,13 +40,13 @@ pub(crate) fn generate_src_image(code: &str, starting_line: u32, theme: &str, fo
     formatter.format(&highlight, theme)
 }
 
-pub(crate) fn generate_src_image_with_query(code: &str, query: &ImgQuery) -> DynamicImage {    
+pub(crate) fn generate_src_image_with_query(code: &str, query: &ImgQuery) -> DynamicImage {
     generate_src_image(
         code,
         query.lines.map(|lines| lines.from).unwrap_or(1),
         &query.theme.clone().unwrap_or("Dracula".to_owned()),
         &query.font.clone().unwrap_or("Hack".to_owned()),
-        query.font_size.unwrap_or(26.0)
+        query.font_size.unwrap_or(26.0),
     )
 }
 
