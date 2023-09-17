@@ -7,6 +7,9 @@ mkShell {
     # Rust
     rustc
     cargo
+    gcc
+    rustfmt
+    clippy
     # Deps
     pkg-config
     openssl
@@ -17,8 +20,8 @@ mkShell {
   NIX_DONT_SET_RPATH = true;
   NIX_NO_SELF_RPATH = true;
   RUST_SRC_PATH = "${rustPlatform.rustLibSrc}";
-  LD_LIBRARY_PATH = lib.makeLibraryPath [ 
-    openssl
+  PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
+  LD_LIBRARY_PATH = lib.makeLibraryPath [
     fontconfig
     freetype
   ];
