@@ -166,7 +166,9 @@ pub(crate) async fn get_gh_open_graph(
                     origin: env.ORIGIN.clone(),
                 };
                 Some(content.get_html())
-            } else if content_type_string.contains("video/mp4") {
+            } else if content_type_string.contains("video/mp4")
+                || content_type_string.contains("application/octet-stream")
+            {
                 let content = VideoContent {
                     path: path.as_ref(),
                     video_url: code_uri.to_string(),
