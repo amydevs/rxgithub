@@ -1,6 +1,6 @@
 use maud::{html, PreEscaped};
 
-use crate::{utils::QueryLines, routes::SrcPath};
+use crate::{utils::QueryLines, routes::{SrcPath, GistPath}};
 
 pub(crate) trait Content {
     fn get_html(&self) -> PreEscaped<String>;
@@ -108,6 +108,33 @@ impl<'a> Content for VideoContent<'a> {
             meta name="twitter:card" content="player";
             meta name="twitter:description" content=(og_description);
             meta name="twitter:video" content=(self.video_url);
+        }
+    }
+}
+
+pub(crate) struct GistContent<'a> {
+    pub(crate) path: &'a GistPath,
+    pub(crate) query_string: String,
+    pub(crate) lines: QueryLines,
+    pub(crate) origin: String,
+}
+
+impl<'a> Content for GistContent<'a> {
+    fn get_html(&self) -> PreEscaped<String> {
+        let og_title = format!("{}/{}", self.path.author, self.path.id);
+        let og_image = format!("{}/gist-image/{}/{}?{}", self.origin, self.path.author, self.path.id, self.query_string);
+        let og_description = format!("Lines {}-{} of {}/{}", self.lines.from, self.lines.to, self.path.author, self.path.id);
+        html!{
+            meta name="description" content=(og_description);
+            meta property="og:image" content=(og_image);
+            meta property="og:image:type" content="image/png";
+            meta property="og:title" content=(og_title);
+            meta property="og:description" content=(og_description);
+
+            meta name="twitter:title" content=(og_title);
+            meta name="twitter:card" content="summary_large_image";
+            meta name="twitter:description" content=(og_description);
+            meta name="twitter:image" content=(og_image);
         }
     }
 }

@@ -55,8 +55,10 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(Data::new(options.clone()))
-            .service(routes::get_open_graph)
-            .service(routes::get_source_image)
+            .service(routes::get_gh_open_graph)
+            .service(routes::get_gh_image)
+            .service(routes::get_gist_open_graph)
+            .service(routes::get_gist_image)
             .service(routes::get_other_pages)
     })
     .bind(("0.0.0.0", port))?

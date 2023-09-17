@@ -3,7 +3,7 @@
 use actix_web::{http::Uri, Result};
 use serde::{Deserialize, Deserializer, de};
 
-use crate::{routes::SrcPath, MAX_CODE_LINES};
+use crate::{routes::{SrcPath, GistPath}, MAX_CODE_LINES};
 
 pub(crate) fn parse_blob_code_uri(path: &SrcPath) -> Result<Uri> {
     Ok(Uri::builder()
@@ -18,6 +18,14 @@ pub(crate) fn parse_raw_code_uri(path: &SrcPath) -> Result<Uri> {
         .scheme("https")
         .authority("raw.githubusercontent.com")
         .path_and_query(format!("/{}/{}/{}/{}", path.author, path.repository, path.branch, path.path))
+        .build()?)
+}
+
+pub(crate) fn parse_raw_gist_code_uri(path: &GistPath) -> Result<Uri> {
+    Ok(Uri::builder()
+        .scheme("https")
+        .authority("gist.githubusercontent.com")
+        .path_and_query(format!("/{}/{}/raw", path.author, path.id))
         .build()?)
 }
 
