@@ -1,9 +1,7 @@
 use actix_web::{http::Uri, Result};
 use serde::{de, Deserialize, Deserializer};
 
-use crate::{
-    routes::{GistPath, SrcPath},
-};
+use crate::routes::{GistPath, SrcPath};
 
 pub(crate) fn parse_blob_code_uri(path: &SrcPath) -> Result<Uri> {
     Ok(Uri::builder()
@@ -43,10 +41,7 @@ pub(crate) struct QueryLines {
 
 impl Default for QueryLines {
     fn default() -> Self {
-        Self {
-            from: 1,
-            to: None,
-        }
+        Self { from: 1, to: None }
     }
 }
 
@@ -70,11 +65,11 @@ impl<'de> Deserialize<'de> for QueryLines {
             {
                 let parts: Vec<&str> = value.split('-').collect();
 
-                if parts.len() == 0 {
+                if parts.is_empty() {
                     return Err(E::custom("invalid format"));
                 }
 
-                let from: u32 = parts.get(0).and_then(|from| from.parse().ok()).unwrap_or(1);
+                let from: u32 = parts.first().and_then(|from| from.parse().ok()).unwrap_or(1);
                 let mut to: Option<u32> = parts.get(1).and_then(|to| to.parse().ok());
 
                 if let Some(to_unwrapped) = to {
@@ -93,7 +88,7 @@ impl<'de> Deserialize<'de> for QueryLines {
 
 pub(crate) struct Lines {
     pub(crate) from: u32,
-    pub(crate) to: u32
+    pub(crate) to: u32,
 }
 
 pub(crate) fn clamp_query_lines(lines: &QueryLines, max_code_lines: u32) -> Lines {
@@ -101,9 +96,12 @@ pub(crate) fn clamp_query_lines(lines: &QueryLines, max_code_lines: u32) -> Line
         if (to - lines.from) < max_code_lines {
             return Lines {
                 from: lines.from,
-                to
-            }
+                to,
+            };
         }
     }
-    return Lines { from: lines.from, to: lines.from + max_code_lines - 1 }
+    Lines {
+        from: lines.from,
+        to: lines.from + max_code_lines - 1,
+    }
 }

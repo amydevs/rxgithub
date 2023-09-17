@@ -30,7 +30,7 @@ impl Default for Options {
             PORT: 8080,
             ORIGIN: "http://localhost:8080".to_string(),
             MAX_DOWNLOAD_BYTES: 1024 * 1024 * 50, // 25 MiB
-            MAX_CODE_LINES: 25
+            MAX_CODE_LINES: 25,
         }
     }
 }
