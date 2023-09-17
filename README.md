@@ -4,7 +4,7 @@ A simple Rust web app that allows you create nice embeds for your GitHub code.
 ![Discord Screenshot](discord_screenshot.png)
 
 ### Usage
-Simply replace `github.com` with `rxgithub.com` when you're sending a GitHub code plob webpage.
+Simply replace `github.com` with `rxgithub.com` when you're sending a GitHub code blob webpage.
 
 Or
 
