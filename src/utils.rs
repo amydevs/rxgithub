@@ -3,7 +3,6 @@ use serde::{de, Deserialize, Deserializer};
 
 use crate::{
     routes::{GistPath, SrcPath},
-    MAX_CODE_LINES,
 };
 
 pub(crate) fn parse_blob_code_uri(path: &SrcPath) -> Result<Uri> {
@@ -97,14 +96,14 @@ pub(crate) struct Lines {
     pub(crate) to: u32
 }
 
-pub(crate) fn clamp_query_lines(lines: &QueryLines) -> Lines {
+pub(crate) fn clamp_query_lines(lines: &QueryLines, max_code_lines: u32) -> Lines {
     if let Some(to) = lines.to {
-        if (to - lines.from) < MAX_CODE_LINES {
+        if (to - lines.from) < max_code_lines {
             return Lines {
                 from: lines.from,
                 to
             }
         }
     }
-    return Lines { from: lines.from, to: lines.from + MAX_CODE_LINES - 1 }
+    return Lines { from: lines.from, to: lines.from + max_code_lines - 1 }
 }
