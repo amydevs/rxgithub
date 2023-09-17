@@ -49,15 +49,13 @@ pub(crate) async fn get_gh_image(
             .and_then(|content_type| content_type.to_str().ok())
             .unwrap_or("");
         if content_type_string.contains("text/plain") {
-            let mut query_lines = query.lines.to_owned().unwrap_or(QueryLines::default());
+            let lines = clamp_query_lines(&query.lines.to_owned().unwrap_or(QueryLines::default()));
             let mut line: u32 = 0;
             let mut bytes_read: u32 = 0;
             let mut buffer = Vec::new();
             let mut body_stream = response.bytes_stream();
 
-            clamp_query_lines(&mut query_lines);
-
-            let start = query_lines.from - 1;
+            let start = lines.from - 1;
 
             while let Some(Ok(chunk)) = body_stream.next().await {
                 for byte in chunk {
@@ -70,9 +68,9 @@ pub(crate) async fn get_gh_image(
                         break;
                     }
 
-                    if line >= start && line < query_lines.to {
+                    if line >= start && line < lines.to {
                         buffer.push(byte);
-                    } else if line >= query_lines.to {
+                    } else if line >= lines.to {
                         break;
                     }
                 }
@@ -141,11 +139,11 @@ pub(crate) async fn get_gh_open_graph(
             println!("Content-Type: {}", content_type_string);
 
             let wrapped_injected_elements = if content_type_string.contains("text/plain") {
-                let query_lines = query.lines.unwrap_or(QueryLines::default());
+                let lines = clamp_query_lines(&query.lines.to_owned().unwrap_or(QueryLines::default()));
                 let content = TextContent {
                     path: path.as_ref(),
                     query_string: req.query_string().to_owned(),
-                    lines: query_lines,
+                    lines,
                     origin: env.ORIGIN.clone(),
                 };
                 Some(content.get_html())
@@ -232,15 +230,13 @@ pub(crate) async fn get_gist_image(
     let code_uri = parse_raw_gist_code_uri(&path.into_inner())?;
 
     if let Ok(response) = reqwest::get(code_uri.to_string()).await {
-        let mut query_lines = query.lines.to_owned().unwrap_or(QueryLines::default());
+        let lines = clamp_query_lines(&query.lines.to_owned().unwrap_or(QueryLines::default()));
         let mut line: u32 = 0;
         let mut bytes_read: u32 = 0;
         let mut buffer = Vec::new();
         let mut body_stream = response.bytes_stream();
 
-        clamp_query_lines(&mut query_lines);
-
-        let start = query_lines.from - 1;
+        let start = lines.from - 1;
 
         while let Some(Ok(chunk)) = body_stream.next().await {
             for byte in chunk {
@@ -253,9 +249,9 @@ pub(crate) async fn get_gist_image(
                     break;
                 }
 
-                if line >= start && line < query_lines.to {
+                if line >= start && line < lines.to {
                     buffer.push(byte);
-                } else if line >= query_lines.to {
+                } else if line >= lines.to {
                     break;
                 }
             }
@@ -297,7 +293,7 @@ pub(crate) async fn get_gist_open_graph(
             let content = GistContent {
                 path: path.as_ref(),
                 query_string: req.query_string().to_owned(),
-                lines: query.lines.unwrap_or(QueryLines::default()),
+                lines: clamp_query_lines(&query.lines.to_owned().unwrap_or(QueryLines::default())),
                 origin: env.ORIGIN.clone(),
             };
 

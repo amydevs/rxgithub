@@ -15,6 +15,8 @@ mkShell {
     openssl
     fontconfig
     freetype
+    # Fly
+    flyctl
   ];
   # Don't set rpath for native addons
   NIX_DONT_SET_RPATH = true;
@@ -22,6 +24,7 @@ mkShell {
   RUST_SRC_PATH = "${rustPlatform.rustLibSrc}";
   PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
   LD_LIBRARY_PATH = lib.makeLibraryPath [
+    openssl
     fontconfig
     freetype
   ];

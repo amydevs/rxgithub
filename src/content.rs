@@ -2,7 +2,7 @@ use maud::{html, PreEscaped};
 
 use crate::{
     routes::{GistPath, SrcPath},
-    utils::QueryLines,
+    utils::Lines,
 };
 
 pub(crate) trait Content {
@@ -12,7 +12,7 @@ pub(crate) trait Content {
 pub(crate) struct TextContent<'a> {
     pub(crate) path: &'a SrcPath,
     pub(crate) query_string: String,
-    pub(crate) lines: QueryLines,
+    pub(crate) lines: Lines,
     pub(crate) origin: String,
 }
 
@@ -158,7 +158,7 @@ impl<'a> Content for VideoContent<'a> {
 pub(crate) struct GistContent<'a> {
     pub(crate) path: &'a GistPath,
     pub(crate) query_string: String,
-    pub(crate) lines: QueryLines,
+    pub(crate) lines: Lines,
     pub(crate) origin: String,
 }
 

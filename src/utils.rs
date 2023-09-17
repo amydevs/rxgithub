@@ -39,14 +39,14 @@ pub(crate) fn parse_raw_gist_code_uri(path: &GistPath) -> Result<Uri> {
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct QueryLines {
     pub(crate) from: u32,
-    pub(crate) to: u32,
+    pub(crate) to: Option<u32>,
 }
 
 impl Default for QueryLines {
     fn default() -> Self {
         Self {
             from: 1,
-            to: MAX_CODE_LINES,
+            to: None,
         }
     }
 }
@@ -71,19 +71,17 @@ impl<'de> Deserialize<'de> for QueryLines {
             {
                 let parts: Vec<&str> = value.split('-').collect();
 
-                if parts.len() != 2 {
+                if parts.len() == 0 {
                     return Err(E::custom("invalid format"));
                 }
 
-                let from: u32 = parts[0]
-                    .parse()
-                    .map_err(|_| E::custom("invalid 'from' value"))?;
-                let to: u32 = parts[1]
-                    .parse()
-                    .map_err(|_| E::custom("invalid 'to' value"))?;
+                let from: u32 = parts.get(0).and_then(|from| from.parse().ok()).unwrap_or(1);
+                let mut to: Option<u32> = parts.get(1).and_then(|to| to.parse().ok());
 
-                if from > to {
-                    return Err(E::custom("'from' is bigger than 'to'"));
+                if let Some(to_unwrapped) = to {
+                    if to_unwrapped < from {
+                        to = None;
+                    }
                 }
 
                 Ok(QueryLines { from, to })
@@ -94,33 +92,19 @@ impl<'de> Deserialize<'de> for QueryLines {
     }
 }
 
-pub(crate) fn clamp_query_lines(lines: &mut QueryLines) {
-    if (lines.to - lines.from) > MAX_CODE_LINES {
-        lines.to = MAX_CODE_LINES;
-    }
+pub(crate) struct Lines {
+    pub(crate) from: u32,
+    pub(crate) to: u32
 }
 
-pub(crate) fn substring_lines_with_max(string: &str, lines: &QueryLines) -> String {
-    if (lines.to - lines.from) > MAX_CODE_LINES {
-        let revised_lines = QueryLines {
-            from: lines.from,
-            to: lines.from + MAX_CODE_LINES,
-        };
-        return substring_lines(string, &revised_lines);
-    }
-    substring_lines(string, lines)
-}
-
-pub(crate) fn substring_lines(string: &str, lines: &QueryLines) -> String {
-    let mut return_string = String::new();
-    let start = lines.from - 1;
-    for (i, line) in string.lines().enumerate() {
-        let i = i as u32;
-        if i >= start && i <= lines.to {
-            return_string += line;
-            return_string += "\n";
+pub(crate) fn clamp_query_lines(lines: &QueryLines) -> Lines {
+    if let Some(to) = lines.to {
+        if (to - lines.from) < MAX_CODE_LINES {
+            return Lines {
+                from: lines.from,
+                to
+            }
         }
     }
-
-    return_string
+    return Lines { from: lines.from, to: lines.from + MAX_CODE_LINES - 1 }
 }
