@@ -39,6 +39,8 @@ pub(crate) async fn get_gh_image(
     path: Path<SrcPath>,
     query: Query<ImgQuery>,
     env: Data<Options>,
+    text_img_gen: Data<image_generator::TextImageGenerator>,
+    svg_img_gen: Data<image_generator::SvgImageGenerator>
 ) -> Result<impl Responder> {
     let code_uri = parse_raw_code_uri(&path.into_inner())?;
 
@@ -79,7 +81,7 @@ pub(crate) async fn get_gh_image(
                 }
             }
             if let Ok(src_code) = std::str::from_utf8(&buffer) {
-                image_generator::generate_src_image_with_query(src_code, &query)
+                text_img_gen.generate_from_query(src_code, &query)
                     .write_to(&mut Cursor::new(&mut buffer), ImageFormat::Png)
                     .unwrap();
                 return Ok(HttpResponse::Ok().content_type("image/png").body(buffer));
@@ -100,7 +102,7 @@ pub(crate) async fn get_gh_image(
                     }
                 }
             }
-            if let Some(image) = image_generator::generate_svg_image(&buffer) {
+            if let Some(image) = svg_img_gen.generate(&buffer) {
                 return Ok(HttpResponse::Ok().content_type("image/png").body(image));
             }
         }
@@ -258,6 +260,7 @@ pub(crate) async fn get_gist_image(
     path: Path<GistPath>,
     query: Query<ImgQuery>,
     env: Data<Options>,
+    text_img_gen: Data<image_generator::TextImageGenerator>,
 ) -> Result<impl Responder> {
     let code_uri = parse_raw_gist_code_uri(&path.into_inner())?;
 
@@ -292,7 +295,7 @@ pub(crate) async fn get_gist_image(
             }
         }
         if let Ok(src_code) = std::str::from_utf8(&buffer) {
-            image_generator::generate_src_image_with_query(src_code, &query)
+            text_img_gen.generate_from_query(src_code, &query)
                 .write_to(&mut Cursor::new(&mut buffer), ImageFormat::Png)
                 .unwrap();
             return Ok(HttpResponse::Ok().content_type("image/png").body(buffer));
