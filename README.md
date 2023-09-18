@@ -28,7 +28,7 @@ javascript:(function()%7Bconst%20githubUrl%20%3D%20%22https%3A%2F%2Fgithub.com%2
 ## Embed Videos
 
 ![image](https://github.com/amydevs/rxgithub/assets/50583248/cf38f9f6-3cf6-41c9-95d1-50ad123c12d2)
-
+![image](https://github.com/amydevs/rxgithub/assets/50583248/cb1d1031-c1f7-4277-88a4-217f2317e6bf)
 
 ## How Does it Work?
 
