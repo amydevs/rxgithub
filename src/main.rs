@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate lazy_static;
 
-use actix_web::{web::Data, App, HttpServer};
+use actix_web::{web, App, HttpServer};
 
 use regex::Regex;
 
@@ -61,7 +61,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            .app_data(Data::new(options.clone()))
+            .app_data(web::Data::new(options.clone()))
             .service(routes::get_gh_open_graph)
             .service(routes::get_gh_image)
             .service(routes::get_gist_open_graph)
