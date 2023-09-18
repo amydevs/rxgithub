@@ -64,6 +64,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(options.clone()))
             .service(routes::get_gh_open_graph)
             .service(routes::get_gh_image)
+            .service(routes::get_gh_video_embed)
             .service(routes::get_gist_open_graph)
             .service(routes::get_gist_image)
             .service(routes::get_other_pages)

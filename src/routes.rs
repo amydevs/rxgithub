@@ -109,6 +109,31 @@ pub(crate) async fn get_gh_image(
     Ok(HttpResponse::NotFound().body("Unable to fetch code..."))
 }
 
+#[get("/video-embed/{author}/{repository}/{branch}/{path:.*}", name = "gh-video-embed")]
+pub(crate) async fn get_gh_video_embed(
+    path: Path<SrcPath>,
+) -> Result<impl Responder> {
+    let video_url = parse_raw_code_uri(path.as_ref())?;
+    let html = html! {
+        (DOCTYPE)
+        html {
+            head {
+                meta charset="utf-8";
+                meta name="viewport" content="width=device-width, initial-scale=1";
+            }
+            body {
+                video style="width: 100%; max-width: 1280px; height: auto;" controls="true" {
+                    source src=(video_url);
+                };
+            }
+        }
+    };
+
+    return Ok(HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body(html.into_string()));
+}
+
 #[get("/{author}/{repository}/blob/{branch}/{path:.*}", name = "gh-og")]
 pub(crate) async fn get_gh_open_graph(
     req: HttpRequest,
@@ -177,6 +202,7 @@ pub(crate) async fn get_gh_open_graph(
                     path: path.as_ref(),
                     video_url: code_uri.to_string(),
                     mime: content_type_string.to_owned(),
+                    origin: env.ORIGIN.clone(),
                 };
                 Some(content.get_html())
             } else {

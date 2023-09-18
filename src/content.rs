@@ -127,11 +127,16 @@ pub(crate) struct VideoContent<'a> {
     pub(crate) path: &'a SrcPath,
     pub(crate) video_url: String,
     pub(crate) mime: String,
+    pub(crate) origin: String,
 }
 
 impl<'a> Content for VideoContent<'a> {
     fn get_html(&self) -> PreEscaped<String> {
         let file_name = self.path.path.split('/').last().unwrap_or("<undefined>");
+        let video_embed_url = format!(
+            "{}/video-embed/{}/{}/{}/{}",
+            self.origin, self.path.author, self.path.repository, self.path.branch, self.path.path
+        );
         let og_title = format!(
             "{} · {}/{}@{}",
             file_name, self.path.repository, self.path.author, self.path.branch
@@ -150,7 +155,9 @@ impl<'a> Content for VideoContent<'a> {
             meta name="twitter:title" content=(og_title);
             meta name="twitter:card" content="player";
             meta name="twitter:description" content=(og_description);
-            meta name="twitter:player" content=(self.video_url);
+            meta name="twitter:player" content=(video_embed_url);
+            meta name="twitter:player:width" content="1280";
+            meta name="twitter:player:height" content="720";
         }
     }
 }
