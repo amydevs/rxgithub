@@ -72,7 +72,7 @@ impl Default for SvgImageGenerator {
         let mut db = fontdb::Database::new();
         db.load_font_data(include_bytes!("../assets/fonts/OpenSans-Regular.ttf").to_vec());
         db.set_serif_family("Open Sans".to_string());
-        Self { db: Default::default() }
+        Self { db }
     }
 }
 
