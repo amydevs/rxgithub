@@ -25,6 +25,17 @@ pub(crate) fn parse_raw_code_uri(path: &SrcPath) -> Result<Uri> {
         .build()?)
 }
 
+pub(crate) fn parse_original_open_graph_uri(path: &SrcPath) -> Result<Uri> {
+    Ok(Uri::builder()
+        .scheme("https")
+        .authority("opengraph.githubassets.com")
+        .path_and_query(format!(
+            "/1/{}/{}",
+            path.author, path.repository
+        ))
+        .build()?)
+}
+
 pub(crate) fn parse_raw_gist_code_uri(path: &GistPath) -> Result<Uri> {
     Ok(Uri::builder()
         .scheme("https")

@@ -2,7 +2,7 @@ use maud::{html, PreEscaped};
 
 use crate::{
     routes::{GistPath, SrcPath},
-    utils::Lines,
+    utils::{Lines, parse_original_open_graph_uri},
 };
 
 pub(crate) trait Content {
@@ -145,6 +145,7 @@ impl<'a> Content for VideoContent<'a> {
             "{} from {}/{}@{}",
             file_name, self.path.author, self.path.repository, self.path.branch
         );
+        let og_image = parse_original_open_graph_uri(&self.path).ok().and_then(|uri| Some(uri.to_string())).unwrap_or(String::new());
         html! {
             meta name="description" content=(og_description);
             meta property="og:video" content=(self.video_url);
@@ -158,6 +159,7 @@ impl<'a> Content for VideoContent<'a> {
             meta name="twitter:player" content=(video_embed_url);
             meta name="twitter:player:width" content="1280";
             meta name="twitter:player:height" content="720";
+            meta name="twitter:image" content=(og_image);
         }
     }
 }
