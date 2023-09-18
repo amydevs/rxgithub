@@ -150,7 +150,7 @@ impl<'a> Content for VideoContent<'a> {
             meta name="twitter:title" content=(og_title);
             meta name="twitter:card" content="player";
             meta name="twitter:description" content=(og_description);
-            meta name="twitter:video" content=(self.video_url);
+            meta name="twitter:player" content=(self.video_url);
         }
     }
 }
