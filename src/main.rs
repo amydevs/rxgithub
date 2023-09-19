@@ -62,7 +62,9 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(options.clone()))
-            .app_data(web::Data::new(image_generator::TextImageGenerator::default()))
+            .app_data(web::Data::new(
+                image_generator::TextImageGenerator::default(),
+            ))
             .app_data(web::Data::new(image_generator::SvgImageGenerator::default()))
             .service(routes::get_gh_open_graph)
             .service(routes::get_gh_image)

@@ -14,8 +14,8 @@ pub(crate) struct TextImageGenerator {
 
 impl Default for TextImageGenerator {
     fn default() -> Self {
-        Self { 
-            ha: HighlightingAssets::new()
+        Self {
+            ha: HighlightingAssets::new(),
         }
     }
 }
@@ -30,26 +30,26 @@ impl TextImageGenerator {
         font_size: f32,
     ) -> DynamicImage {
         let (ps, ts) = (&self.ha.syntax_set, &self.ha.theme_set);
-    
+
         // Change this later to first choose syntax by file extension
         let syntax = ps
             .find_syntax_by_first_line(code)
             .unwrap_or(ps.find_syntax_by_token("rs").unwrap());
         let theme = ts.themes.get(theme).unwrap_or(&ts.themes["Dracula"]);
-    
+
         let mut h = HighlightLines::new(syntax, theme);
         let highlight = LinesWithEndings::from(code)
-            .map(|line| h.highlight_line(line, &ps))
+            .map(|line| h.highlight_line(line, ps))
             .collect::<Result<Vec<_>, _>>()
             .unwrap();
-    
+
         let mut formatter = ImageFormatterBuilder::new()
             .font(vec![(font, font_size)])
             .shadow_adder(ShadowAdder::default())
             .line_offset(starting_line)
             .build()
             .unwrap();
-    
+
         formatter.format(&highlight, theme)
     }
     pub(crate) fn generate_from_query(&self, code: &str, query: &ImgQuery) -> DynamicImage {

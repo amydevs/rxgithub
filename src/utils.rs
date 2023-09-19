@@ -69,7 +69,10 @@ impl<'de> Deserialize<'de> for QueryLines {
                     return Err(E::custom("invalid format"));
                 }
 
-                let from: u32 = parts.first().and_then(|from| from.parse().ok()).unwrap_or(1);
+                let from: u32 = parts
+                    .first()
+                    .and_then(|from| from.parse().ok())
+                    .unwrap_or(1);
                 let mut to: Option<u32> = parts.get(1).and_then(|to| to.parse().ok());
 
                 if let Some(to_unwrapped) = to {

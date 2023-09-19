@@ -40,7 +40,7 @@ pub(crate) async fn get_gh_image(
     query: Query<ImgQuery>,
     env: Data<Options>,
     text_img_gen: Data<image_generator::TextImageGenerator>,
-    svg_img_gen: Data<image_generator::SvgImageGenerator>
+    svg_img_gen: Data<image_generator::SvgImageGenerator>,
 ) -> Result<impl Responder> {
     let code_uri = parse_raw_code_uri(&path.into_inner())?;
 
@@ -81,7 +81,8 @@ pub(crate) async fn get_gh_image(
                 }
             }
             if let Ok(src_code) = std::str::from_utf8(&buffer) {
-                text_img_gen.generate_from_query(src_code, &query)
+                text_img_gen
+                    .generate_from_query(src_code, &query)
                     .write_to(&mut Cursor::new(&mut buffer), ImageFormat::Png)
                     .unwrap();
                 return Ok(HttpResponse::Ok().content_type("image/png").body(buffer));
@@ -111,10 +112,11 @@ pub(crate) async fn get_gh_image(
     Ok(HttpResponse::NotFound().body("Unable to fetch code..."))
 }
 
-#[get("/video-embed/{author}/{repository}/{branch}/{path:.*}", name = "gh-video-embed")]
-pub(crate) async fn get_gh_video_embed(
-    path: Path<SrcPath>,
-) -> Result<impl Responder> {
+#[get(
+    "/video-embed/{author}/{repository}/{branch}/{path:.*}",
+    name = "gh-video-embed"
+)]
+pub(crate) async fn get_gh_video_embed(path: Path<SrcPath>) -> Result<impl Responder> {
     let video_url = parse_raw_code_uri(path.as_ref())?;
     let html = html! {
         (DOCTYPE)
@@ -295,7 +297,8 @@ pub(crate) async fn get_gist_image(
             }
         }
         if let Ok(src_code) = std::str::from_utf8(&buffer) {
-            text_img_gen.generate_from_query(src_code, &query)
+            text_img_gen
+                .generate_from_query(src_code, &query)
                 .write_to(&mut Cursor::new(&mut buffer), ImageFormat::Png)
                 .unwrap();
             return Ok(HttpResponse::Ok().content_type("image/png").body(buffer));
