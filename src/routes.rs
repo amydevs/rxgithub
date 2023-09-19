@@ -255,7 +255,7 @@ pub(crate) struct GistPath {
     pub(crate) id: String,
 }
 
-#[get("/gist-image/{author}/{id:.*}", name = "gist-image")]
+#[get("/gist-image/{author}/{id}", name = "gist-image")]
 pub(crate) async fn get_gist_image(
     path: Path<GistPath>,
     query: Query<ImgQuery>,
@@ -305,7 +305,7 @@ pub(crate) async fn get_gist_image(
     Ok(HttpResponse::NotFound().body("Unable to fetch code..."))
 }
 
-#[get("/gist/{author}/{id:.*}", name = "gist-og")]
+#[get("/gist/{author}/{id}", name = "gist-og")]
 pub(crate) async fn get_gist_open_graph(
     req: HttpRequest,
     path: Path<GistPath>,
