@@ -3,16 +3,16 @@ use serde::{de, Deserialize, Deserializer};
 
 use crate::routes::{GistPath, SrcPath};
 
-pub(crate) fn parse_blob_code_uri(path: &SrcPath) -> Result<Uri> {
-    Ok(Uri::builder()
-        .scheme("https")
-        .authority("github.com")
-        .path_and_query(format!(
-            "/{}/{}/blob/{}/{}",
-            path.author, path.repository, path.branch, path.path
-        ))
-        .build()?)
-}
+// pub(crate) fn parse_blob_code_uri(path: &SrcPath) -> Result<Uri> {
+//     Ok(Uri::builder()
+//         .scheme("https")
+//         .authority("github.com")
+//         .path_and_query(format!(
+//             "/{}/{}/blob/{}/{}",
+//             path.author, path.repository, path.branch, path.path
+//         ))
+//         .build()?)
+// }
 
 pub(crate) fn parse_raw_code_uri(path: &SrcPath) -> Result<Uri> {
     Ok(Uri::builder()

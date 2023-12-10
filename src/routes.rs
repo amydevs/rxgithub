@@ -53,7 +53,7 @@ pub(crate) async fn get_gh_image(
         if content_type_string.contains("text/plain") {
             let lines = clamp_query_lines(
                 &query.lines.to_owned().unwrap_or(QueryLines::default()),
-                env.MAX_CODE_LINES,
+                env.max_code_lines,
             );
             let mut line: u32 = 0;
             let mut bytes_read: u32 = 0;
@@ -69,7 +69,7 @@ pub(crate) async fn get_gh_image(
                     }
                     bytes_read += 1;
 
-                    if bytes_read >= env.MAX_DOWNLOAD_BYTES {
+                    if bytes_read >= env.max_download_bytes {
                         break;
                     }
 
@@ -98,7 +98,7 @@ pub(crate) async fn get_gh_image(
 
                     bytes_read += 1;
 
-                    if bytes_read >= env.MAX_DOWNLOAD_BYTES {
+                    if bytes_read >= env.max_download_bytes {
                         break;
                     }
                 }
@@ -146,7 +146,7 @@ pub(crate) async fn get_gh_open_graph(
     env: Data<Options>,
 ) -> Result<impl Responder> {
     let gh_url = format!("https://github.com{}", req.uri());
-    let canon_url = format!("{}{}", env.ORIGIN, req.uri());
+    let canon_url = format!("{}{}", env.origin, req.uri());
 
     println!("Graph Visited: {}", canon_url);
 
@@ -173,13 +173,13 @@ pub(crate) async fn get_gh_open_graph(
             let wrapped_injected_elements = if content_type_string.contains("text/plain") {
                 let lines = clamp_query_lines(
                     &query.lines.to_owned().unwrap_or(QueryLines::default()),
-                    env.MAX_CODE_LINES,
+                    env.max_code_lines,
                 );
                 let content = TextContent {
                     path: path.as_ref(),
                     query_string: req.query_string().to_owned(),
                     lines,
-                    origin: env.ORIGIN.clone(),
+                    origin: env.origin.clone(),
                 };
                 Some(content.get_html())
             } else if content_type_string.contains("image/png")
@@ -196,7 +196,7 @@ pub(crate) async fn get_gh_open_graph(
             } else if content_type_string.contains("image/svg+xml") {
                 let content = SVGContent {
                     path: path.as_ref(),
-                    origin: env.ORIGIN.clone(),
+                    origin: env.origin.clone(),
                 };
                 Some(content.get_html())
             } else if content_type_string.contains("video/mp4")
@@ -206,7 +206,7 @@ pub(crate) async fn get_gh_open_graph(
                     path: path.as_ref(),
                     video_url: code_uri.to_string(),
                     mime: content_type_string.to_owned(),
-                    origin: env.ORIGIN.clone(),
+                    origin: env.origin.clone(),
                 };
                 Some(content.get_html())
             } else {
@@ -224,7 +224,7 @@ pub(crate) async fn get_gh_open_graph(
                             meta property="og:url" content=(canon_url);
                             meta property="og:site_name" content="GitHub";
 
-                            meta property="twitter:domain" content=(env.ORIGIN.replace("http://", "").replace("https://", ""));
+                            meta property="twitter:domain" content=(env.origin.replace("http://", "").replace("https://", ""));
                             meta property="twitter:url" content=(canon_url);
 
                             (injected_elements)
@@ -269,7 +269,7 @@ pub(crate) async fn get_gist_image(
     if let Ok(response) = reqwest::get(code_uri.to_string()).await {
         let lines = clamp_query_lines(
             &query.lines.to_owned().unwrap_or(QueryLines::default()),
-            env.MAX_CODE_LINES,
+            env.max_code_lines,
         );
         let mut line: u32 = 0;
         let mut bytes_read: u32 = 0;
@@ -285,7 +285,7 @@ pub(crate) async fn get_gist_image(
                 }
                 bytes_read += 1;
 
-                if bytes_read >= env.MAX_DOWNLOAD_BYTES {
+                if bytes_read >= env.max_download_bytes {
                     break;
                 }
 
@@ -321,7 +321,7 @@ pub(crate) async fn get_gist_open_graph(
         path.id,
         req.query_string()
     );
-    let canon_url = format!("{}{}", env.ORIGIN, req.uri());
+    let canon_url = format!("{}{}", env.origin, req.uri());
 
     println!("Graph Visited: {}", canon_url);
 
@@ -336,9 +336,9 @@ pub(crate) async fn get_gist_open_graph(
                 query_string: req.query_string().to_owned(),
                 lines: clamp_query_lines(
                     &query.lines.to_owned().unwrap_or(QueryLines::default()),
-                    env.MAX_CODE_LINES,
+                    env.max_code_lines,
                 ),
-                origin: env.ORIGIN.clone(),
+                origin: env.origin.clone(),
             };
 
             let html = html! {
@@ -351,7 +351,7 @@ pub(crate) async fn get_gist_open_graph(
                         meta property="og:url" content=(canon_url);
                         meta property="og:site_name" content="GitHub Gist";
 
-                        meta property="twitter:domain" content=(env.ORIGIN.replace("http://", "").replace("https://", ""));
+                        meta property="twitter:domain" content=(env.origin.replace("http://", "").replace("https://", ""));
                         meta property="twitter:url" content=(canon_url);
 
                         (content.get_html())

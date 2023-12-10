@@ -19,18 +19,18 @@ lazy_static! {
 
 #[derive(Clone)]
 struct Options {
-    PORT: u16,
-    ORIGIN: String,
-    MAX_DOWNLOAD_BYTES: u32,
-    MAX_CODE_LINES: u32,
+    port: u16,
+    origin: String,
+    max_download_bytes: u32,
+    max_code_lines: u32,
 }
 impl Default for Options {
     fn default() -> Self {
         Options {
-            PORT: 8080,
-            ORIGIN: "http://localhost:8080".to_string(),
-            MAX_DOWNLOAD_BYTES: 1024 * 1024 * 50, // 25 MiB
-            MAX_CODE_LINES: 25,
+            port: 8080,
+            origin: "http://localhost:8080".to_string(),
+            max_download_bytes: 1024 * 1024 * 50, // 25 MiB
+            max_code_lines: 25,
         }
     }
 }
@@ -42,22 +42,22 @@ async fn main() -> std::io::Result<()> {
     let default_options = Options::default();
 
     let options = Options {
-        PORT: std::env::var("PORT")
+        port: std::env::var("PORT")
             .ok()
             .and_then(|port| port.parse::<u16>().ok())
-            .unwrap_or(default_options.PORT),
-        ORIGIN: std::env::var("ORIGIN").unwrap_or(Options::default().ORIGIN),
-        MAX_DOWNLOAD_BYTES: std::env::var("MAX_DOWNLOAD_BYTES")
+            .unwrap_or(default_options.port),
+        origin: std::env::var("ORIGIN").unwrap_or(Options::default().origin),
+        max_download_bytes: std::env::var("MAX_DOWNLOAD_BYTES")
             .ok()
             .and_then(|bytes| bytes.parse::<u32>().ok())
-            .unwrap_or(default_options.MAX_DOWNLOAD_BYTES),
-        MAX_CODE_LINES: std::env::var("MAX_CODE_LINES")
+            .unwrap_or(default_options.max_download_bytes),
+        max_code_lines: std::env::var("MAX_CODE_LINES")
             .ok()
             .and_then(|lines| lines.parse::<u32>().ok())
-            .unwrap_or(default_options.MAX_CODE_LINES),
+            .unwrap_or(default_options.max_code_lines),
     };
 
-    let port = options.PORT;
+    let port = options.port;
 
     HttpServer::new(move || {
         App::new()
